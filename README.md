@@ -23,6 +23,26 @@ The caching server expects new values every 60 seconds and requests them
 every minute by invoking the wrapper script. The ODROID GO application
 checks the caching server every two seconds.
 
+## Screenshot
+
+![Screenshot](https://raw.githubusercontent.com/tx-odroid/PIMwatch/master/PIMwatch-screenshot.jpg)
+
+_(The logo with the "mirrored 'y'" as shown here in the screenshot is "borrowed" partially from SAP Hybris. The logos in this repository are different.)_
+
+## Features
+
+   * several WiFi configs can be stored in a file PIMWIFI.TXT on SD card, PIMwatch will try all until the first connecting one
+   * support for "DynDNS" in a configurable way to easily connect to the auxiliary HTTP server
+   * auxiliary HTTP server caches recent values, is lightweight and can be accessed with "higher" frequency (e.g. interval of one second or less)
+   * PPM color bitmap support (many other bitmap solutions don't support color or are not "lightweight")
+
+## Requirements
+
+   * Arduino IDE
+   * [Bodmer/TFT\_eSPI](https://github.com/Bodmer/TFT_eSPI)
+   * for auxiliary caching httpd: C compiler, POSIX environment
+   * optional (for mkfw): [OtherCrashOverride/odroid-go-firmware](https://github.com/OtherCrashOverride/odroid-go-firmware)
+
 ## Description of files
 
    * caching-httpd/: directory with the caching httpd
@@ -34,15 +54,9 @@ checks the caching server every two seconds.
    * PIMwatch-caching-httpd-dyndns-register.sh: DYNDNS registering
    * PIMwatch.ino: the sketch itself
    * PIMwatch.png: the logo shown in the firmware menu
-   * TFT\_eSPI-User-Setup-odroid-go.patch: for ODROID GO display
+   * TFT\_eSPI/TFT\_eSPI-User-Setup-odroid-go-display.patch: for ODROID GO display
 
-## Requirements
+## Installation
 
-   * Bodmer TFT\_eSPI lib
-   * auxiliary caching httpd: C compiler, POSIX environment
-   * optional (for mkfw): odroid-go-firmware
-
-## Screenshot
-
-![Screenshot](https://raw.githubusercontent.com/tx-odroid/PIMwatch/master/PIMwatch-screenshot.jpg)
+TBD - quick summary: Install/configure ODROID GO environment, install TFT\_eSPI in Arduino/libraries, patch User-Setup.h in it and build PIMwatch.ino with Arduino
 
