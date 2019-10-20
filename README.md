@@ -38,7 +38,7 @@ _(The logo with the "mirrored 'y'" as shown here in the screenshot is "borrowed"
 
 ## Requirements
 
-   * Arduino IDE
+   * Arduino IDE with ORDROID GO development environment
    * [Bodmer/TFT\_eSPI](https://github.com/Bodmer/TFT_eSPI)
    * for auxiliary caching httpd: C compiler, POSIX environment
    * optional (for mkfw): [OtherCrashOverride/odroid-go-firmware](https://github.com/OtherCrashOverride/odroid-go-firmware)
@@ -58,5 +58,54 @@ _(The logo with the "mirrored 'y'" as shown here in the screenshot is "borrowed"
 
 ## Installation
 
-TBD - quick summary: Install/configure ODROID GO environment, install TFT\_eSPI in Arduino/libraries, patch User-Setup.h in it and build PIMwatch.ino with Arduino
+As a requirement you need the Arduino IDE and the ODROID GO development environment installed like described on
+[Getting started with Arduino](https://wiki.odroid.com/odroid_go/arduino/01_arduino_setup).
+
+An alternative and script based installation method for Linux and macOS is provided in
+[tx-odroid/odroid-go-install](https://github.com/tx-odroid/odroid-go-install).
+
+### Installation of PIMwatch and TFT Lib
+
+1. Step into your Arduino dir (e.g. `cd ~/Arduino`).
+2. Clone PIMwatch: `git clone https://github.com/tx-odroid/PIMwatch.git`
+3. Go to libraries dir and get TFT lib: `cd libraries; git clone https://github.com/Bodmer/TFT_eSPI.git`
+4. Step into this dir and patch it for ODROID GO display: `cd TFT_eSPI; patch User_Setup.h <../../PIMwatch/TFT_eSPI/TFT_eSPI-User-Setup-odroid-go-display.patch`
+
+### Fonts
+
+The font files in `data` directory are empty (need to check license). Create your own `.vlw` files with 
+[Processing IDE](https://processing.org/).
+
+### Configure PIMwatch
+
+Open PIMwatch.ino in Arduino and check/modify these variables to match your environment:
+
+   * UseDynDns
+   * DynDnsServer
+   * AuxHttpdServer
+   * AuxHttpdPort (need to match the one in PIMwatch-caching-httpd.c)
+
+Create a file `PIMWIFI.TXT` on the root level of your ODROID GO SD card and add one or more WiFi configs. Each config consists of 2 lines: SSID and password.
+
+If you don't use DynDNS then you also need to specify a static URL under which your auxiliary HTTP server can be accessed later.
+
+### Auxiliary HTTP server
+
+#### Edit Scripts
+
+You need to modify get-last-loadlog-lines.sh to match your needs with e.g. an ssh command to get the values from the monitored environment.
+
+The second script PIMwatch-caching-httpd-dyndns-register.sh needs to be adjusted for your DynDNS setup. If you don't use DynDNS then you can simply do an "exit 0" in the script.
+
+#### Build server
+
+Edit PIMwatch-caching-httpd.c and modify the script paths `COMMAND_DYNDNS_REGISTER` and `COMMAND_LOADLOG_LINE`.
+
+Then build the server:
+
+    gcc -O2 -o PIMwatch-caching-httpd PIMwatch-caching-httpd.c || gcc -O2 -o PIMwatch-caching-httpd PIMwatch-caching-httpd.c -lpthread
+
+Start it via `./PIMwatch-caching-httpd`.
+
+
 
