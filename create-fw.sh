@@ -4,8 +4,12 @@ cd $(dirname $0)
 SKETCHNAME=$(basename $(pwd))
 DESCRIPTION="$SKETCHNAME - some PIM monitoring"
 
-SPIFFS=~/Arduino/hardware/espressif/esp32/tools/mkspiffs/mkspiffs
-MKFW=~/Arduino/odroid-go-firmware/tools/mkfw/mkfw
+ARDUINO=~/Arduino
+# macOS
+test -d ~/Documents/Arduino && ARDUINO=~/Documents/Arduino
+
+SPIFFS=$ARDUINO/hardware/espressif/esp32/tools/mkspiffs/mkspiffs
+MKFW=$ARDUINO/odroid-go-firmware/tools/mkfw/mkfw
 
 # cleanups
 rm -f *.ino.bin spiffs.bin *.fw tile.raw
@@ -13,8 +17,8 @@ rm -f *.ino.bin spiffs.bin *.fw tile.raw
 # bin file
 echo
 echo Get build bin file
-BUILD_INO_BIN=$(find /tmp/arduino_build_* -name "$SKETCHNAME.ino.bin" |xargs -r ls -ltr|tail -n 1|awk '{print$9}')
-[ -z "$BUILD_INO_BIN" ] && { echo "ERROR: could not find $SKETCHNAME.ino.bin in /tmp. Did you build it recently?"; exit 1; }
+BUILD_INO_BIN=$(find /private/var/folders /tmp/arduino_build_* -name "$SKETCHNAME.ino.bin" 2>/dev/null|xargs ls -ltr|fgrep "$SKETCHNAME.ino.bin"|tail -n 1|awk '{print$9}')
+[ -z "$BUILD_INO_BIN" ] && { echo "ERROR: could not find $SKETCHNAME.ino.bin in /tmp or /private/var. Did you build it recently?"; exit 1; }
 echo "$BUILD_INO_BIN ==> ."
 cp -af $BUILD_INO_BIN .
 
