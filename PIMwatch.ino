@@ -116,6 +116,7 @@ int rgbCursor;
 #define STRING_SIZE 24
 #define URL_MAX_SIZE 40
 char AuxHttpd[URL_MAX_SIZE+1];
+char AuxHttpdServerIP[STRING_SIZE+1];
 char TimeStrFull[STRING_SIZE+1];
 char TimeStrDate[STRING_SIZE+1];
 char TimeStrClock[STRING_SIZE+1];
@@ -255,24 +256,34 @@ connected:
   delay(1000);
 }
 
-static void setAuxHttpdUrl() {
+static void setAuxHttpdUrlFromSD() {
   String w;
-  if (UseDynDns) {
-    w = String("http://") + AuxHttpdServer + ":" + AuxHttpdPort + "/";
-  } else {
-    // get URL from SD
-    File urlFile = SD.open("/" UrlConf);
-    if (!urlFile) {
-      halt("Failed to open file " UrlConf " for reading");
-    }
-    while (urlFile.available()) {
-      w = urlFile.readStringUntil('\n');
-      w.replace("\r", "");
-      break;
-    }
-    urlFile.close();
+  // get URL from SD
+  File urlFile = SD.open("/" UrlConf);
+  if (!urlFile) {
+    halt("Failed to open file " UrlConf " for reading");
   }
+  while (urlFile.available()) {
+    w = urlFile.readStringUntil('\n');
+    w.replace("\r", "");
+    break;
+  }
+  urlFile.close();
   strncpy(AuxHttpd, w.c_str(), URL_MAX_SIZE);
+  Serial.print("AuxHTTPD from SD: ");
+  Serial.println(AuxHttpd);
+}
+
+static void setAuxHttpdUrlByDynDNS() {
+  char *p;
+  p = stpcpy(AuxHttpd, "http://");
+  p = stpncpy(p, AuxHttpdServerIP, STRING_SIZE);
+  *p++ = ':';
+  p = stpcpy(p, AuxHttpdPort);
+  *p++ = '/';
+  *p = 0;
+  //w = String("http://") + AuxHttpdServerIP + ":" + AuxHttpdPort + "/";
+  //strncpy(AuxHttpd, w.c_str(), URL_MAX_SIZE);
   Serial.print("AuxHTTPD: ");
   Serial.println(AuxHttpd);
 }
@@ -635,7 +646,8 @@ void setupDns() {
     }
     delay(500);
   }
-  Serial.printf("address: %s\r\n", ipaddr_ntoa_r(&ip, buf, 30));
+  strncpy(AuxHttpdServerIP, ipaddr_ntoa_r(&ip, buf, 30), STRING_SIZE);
+  Serial.printf("address: %s\r\n", AuxHttpdServerIP);
 }
 
 static void beep() {
@@ -665,11 +677,15 @@ void setup(void) {
   setButtonPullups();
 
   getSsidListFromSD();
-  setAuxHttpdUrl();
+  if (!UseDynDns) {
+    setAuxHttpdUrlFromSD();
+  }
 
   connectWifi();
+
   if (UseDynDns) {
     setupDns();
+    setAuxHttpdUrlByDynDNS();
   }
 
   getAllValuesFromAuxHttpd();  
