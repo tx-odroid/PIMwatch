@@ -622,20 +622,14 @@ static int getKeysPressed() {
   return NONE;
 }
 
-void setupDns() {
-  char buf[31];
-  ip_addr_t ip;
+void getHostByName(const char *name, ip_addr_t *ip) {
   err_t dns_result;
-  *buf = 0;
-  int dnswait = 4;
-
-  ipaddr_aton(DynDnsServer, &ip);
-  dns_setserver(0, &ip);
+  int dnswait = 6;
 
   for (;;) {
     // don't use callback - instead simply poll and check for ERR_INPROGRESS
-    dns_result = dns_gethostbyname(AuxHttpdServer, &ip, 0, 0);
-    Serial.printf("dns_gethostbyname %s: %d\r\n", AuxHttpdServer, dns_result);
+    dns_result = dns_gethostbyname(name, ip, 0, 0);
+    Serial.printf("dns_gethostbyname %s: %d\r\n", name, dns_result);
     if (dns_result != ERR_INPROGRESS) {
       break;
     }
@@ -646,6 +640,27 @@ void setupDns() {
     }
     delay(500);
   }
+}
+
+void setupDns() {
+  char buf[31];
+  ip_addr_t ip;
+  char *p;
+  *buf = 0;
+
+  /* first try it with given DNS resolver */
+  Serial.printf("trying to get IP# via local DNS resolver set by WiFi");
+  getHostByName(AuxHttpdServer, &ip);
+  ipaddr_ntoa_r(&ip, buf, 30);
+
+  if (*buf == '0') {
+    /* fallback: if local DNS resolver did not work then try to query DynDNS server directly */
+    Serial.printf("fallback: trying to get IP# directly from DynDNS server");
+    ipaddr_aton(DynDnsServer, &ip);
+    dns_setserver(0, &ip);
+    getHostByName(AuxHttpdServer, &ip);
+  }
+
   strncpy(AuxHttpdServerIP, ipaddr_ntoa_r(&ip, buf, 30), STRING_SIZE);
   Serial.printf("address: %s\r\n", AuxHttpdServerIP);
 }
